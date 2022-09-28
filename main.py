@@ -1,18 +1,12 @@
 import discord
 import config
-import yt_dlp
-from time import sleep
 from bot_token import TOKEN
 from discord.ext import commands
 from youtube_dl import YoutubeDL
 
 
 bot = commands.Bot(command_prefix='!')
-
-
-@bot.event
-async def on_ready():
-    print('bot online')
+query = []
 
 
 async def check_domains(src):
@@ -21,7 +15,26 @@ async def check_domains(src):
             return True
     return False
 
-query = []
+
+def play_next(context, songs_query):
+    print('PLAY_NEXT')
+    if len(songs_query) != 0:
+        voice = discord.utils.get(bot.voice_clients, guild=context.guild)
+        with YoutubeDL(config.YOUTUBE_OPTIONS) as youtube_download:
+            try:
+                info = youtube_download.extract_info(songs_query[0], download=False)
+            except:
+                info = youtube_download.extract_info(songs_query[0], download=False)
+        url = info['formats'][0]['url']
+        if len(songs_query) != 0:
+            songs_query.pop(0)
+        voice.play(discord.FFmpegPCMAudio(source=url, **config.FFMPEG_OPTIONS), after=lambda x: play_next(context, songs_query))
+
+
+@bot.event
+async def on_ready():
+    print('bot online')
+
 
 @bot.command()
 async def play(context, command=None):
@@ -52,23 +65,9 @@ async def play(context, command=None):
             return
 
         with YoutubeDL(config.YOUTUBE_OPTIONS) as youtube_download:
-            info = youtube_download.extract_info(src, download=True)
+            info = youtube_download.extract_info(src, download=False)
         url = info['formats'][0]['url']
-        name = info['title']
-        await context.channel.send(f'Now playing: {name}. Requested by {author.mention}')
         voice.play(discord.FFmpegPCMAudio(source=url, **config.FFMPEG_OPTIONS), after=lambda x: play_next(context, query))
-
-
-def play_next(context, songs_query):
-    print('PLAY_NEXT')
-    if len(songs_query) != 0:
-        voice = discord.utils.get(bot.voice_clients, guild=context.guild)
-        with YoutubeDL(config.YOUTUBE_OPTIONS) as youtube_download:
-            info = youtube_download.extract_info(songs_query[0], download=True)
-        url = info['formats'][0]['url']
-        if len(songs_query) != 0:
-            songs_query.pop(0)
-        voice.play(discord.FFmpegPCMAudio(source=url, **config.FFMPEG_OPTIONS), after=lambda x: play_next(context, songs_query))
 
 
 @bot.command()
