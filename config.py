@@ -1,1 +1,15 @@
-TOKEN = 'MTAyNDI3MDkzODU1ODE2OTExOA.GUqRTa.hEVrrCjoRvb09texnKTc_g-C-CARP6r6ABwMWg'
+YOUTUBE_OPTIONS = {
+    'format': 'worstaudio/best',
+    'noplaylist': 'False',
+    'simulate': 'True',
+    'preferredquality': '192',
+    'preferredcodec': 'mp3',
+    'key': 'FFmpegExtractAudio',
+}
+
+FFMPEG_OPTIONS = {
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn',
+}
+
+DOMAINS = ['https://www.youtube.com/', 'http://www.youtube.com/', 'https://youtu.be/', 'http://youtu.be/']
