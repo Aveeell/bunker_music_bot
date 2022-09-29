@@ -37,11 +37,26 @@ async def on_ready():
 
 
 @bot.command()
+async def commands(context):
+    await context.channel.send(f'{context.author.mention},\n'
+                               '!play **__ссылка на youtube__** - включит песню по ссылке, либо добавит в очередь\n'
+                               '!add **__ссылка на youtube__** - добавит песню в очередь\n'
+                               '!pause - поставит песню на паузу\n'
+                               '!resume - продолжит вопроизведение после паузы\n'
+                               '!stop - остановит воспроизведение полностью\n'
+                               '!leave - выйти из голосового канала\n'
+                               '!skip - пропустить текущую песню и перейти на следующую в очереди\n'
+                               'clear - очистить очередь воспроизведения\n'
+                               '!stream **__ссылка на прямой эфир youtube__** - ретранслирует аудодорожку в голосовой канал')
+
+
+@bot.command()
 async def play(context, command=None):
     author = context.author
     if command is None:
-        name_channel = author.voice.channel.name
-        voice_channel = discord.utils.get(context.guild.voice_channels, name=name_channel)
+        if len(query) != 0:
+            params = query
+            query.pop(0)
     else:
         params = command.split(' ')
     if len(params) == 1:
@@ -67,7 +82,11 @@ async def play(context, command=None):
         with YoutubeDL(config.YOUTUBE_OPTIONS) as youtube_download:
             info = youtube_download.extract_info(src, download=False)
         url = info['formats'][0]['url']
-        voice.play(discord.FFmpegPCMAudio(source=url, **config.FFMPEG_OPTIONS), after=lambda x: play_next(context, query))
+        if voice.is_playing():
+            await context.channel.send(f'{context.author.mention}, can\'t play your song now, added to playlist')
+            query.append(src)
+        else:
+            voice.play(discord.FFmpegPCMAudio(source=url, **config.FFMPEG_OPTIONS), after=lambda x: play_next(context, query))
 
 
 @bot.command()
@@ -85,14 +104,22 @@ async def skip(context):
         await context.channel.send(f'{context.author.mention}, no more songs in playlist')
 
 
-
 @bot.command()
 async def leave(context):
+    global query
     voice = discord.utils.get(bot.voice_clients, guild=context.guild)
     if voice.is_connected():
         await voice.disconnect()
     else:
-        await context.channel.send(f'{context.author.mention}, bot already stopped')
+        await context.channel.send(f'{context.author.mention}, bot is not connected to the voice channel')
+    query = []
+
+
+@bot.command()
+async def clear(context):
+    global query
+    query = []
+    await context.channel.send(f'{context.author.mention}, play queue cleared')
 
 
 @bot.command()
@@ -119,7 +146,7 @@ async def stop(context):
     if voice.is_playing() or voice.is_pause():
         voice.stop()
     else:
-        await context.channel.send(f'{context.author.mention}, bot already paused')
+        await context.channel.send(f'{context.author.mention}, bot already stopped')
 
 
 @bot.command()
@@ -137,9 +164,7 @@ async def stream(context, *, arg):
             info = ydl.extract_info(arg, download=False)
         else:
             info = ydl.extract_info(f"ytsearch:{arg}", download=False)['entries'][0]
-
     url = info['formats'][0]['url']
-
     voice_channel.play(discord.FFmpegPCMAudio(source=url, **config.FFMPEG_OPTIONS))
 
 
@@ -148,4 +173,5 @@ bot.run(TOKEN)
 '''
 если не работает ffmpeg, то в папку, где лежат скрипты питона (.../Python/Python39/Scripts) нужно докинуть экзешники
 из папки ffmpeg/bin (https://ffmpeg.org/download.html) 
+либо в папку проекта, но тогда указать executable в discord.FFmpegPCMAudio(executable='<путь к экзешнику>')
 '''
