@@ -46,7 +46,7 @@ async def commands(context):
                                '!stop - остановит воспроизведение полностью\n'
                                '!leave - выйти из голосового канала\n'
                                '!skip - пропустить текущую песню и перейти на следующую в очереди\n'
-                               'clear - очистить очередь воспроизведения\n'
+                               '!clear - очистить очередь воспроизведения\n'
                                '!stream **__ссылка на прямой эфир youtube__** - ретранслирует аудодорожку в голосовой канал')
 
 
@@ -169,9 +169,3 @@ async def stream(context, *, arg):
 
 
 bot.run(TOKEN)
-
-'''
-если не работает ffmpeg, то в папку, где лежат скрипты питона (.../Python/Python39/Scripts) нужно докинуть экзешники
-из папки ffmpeg/bin (https://ffmpeg.org/download.html) 
-либо в папку проекта, но тогда указать executable в discord.FFmpegPCMAudio(executable='<путь к экзешнику>')
-'''
